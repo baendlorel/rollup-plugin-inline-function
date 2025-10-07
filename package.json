@@ -1,0 +1,24 @@
+{
+  "name": "rollup-plugin-inline-function",
+  "purpose": "rollup-plugin",
+  "description": "Inline simple functions line c++ does",
+  "description_zh": "内联简单函数，如 C++ 所做的那样",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/baendlorel/rollup-plugin-inline-function.git"
+  },
+  "keywords": [
+    "rollup",
+    "rollup-plugin",
+    "inline",
+    "function"
+  ],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/baendlorel/rollup-plugin-inline-function/issues"
+  },
+  "homepage": "https://github.com/baendlorel/rollup-plugin-inline-function#readme"
+}
