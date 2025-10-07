@@ -1,17 +1,15 @@
 import type { Plugin } from 'rollup';
-import { RollupConditionalCompilationOptions } from '@/types/common.js';
-import { IfParser } from './parser.js';
+import { RollupInlineFunctionOptions } from '@/types/common.js';
+import { Inline } from './parser.js';
 
 /**
  * @param options options of the plugin
  *
  * __PKG_INFO__
  */
-export function conditionalCompilation(
-  options: Partial<RollupConditionalCompilationOptions> = {}
-): Plugin {
+export function conditionalCompilation(options: Partial<RollupInlineFunctionOptions> = {}): Plugin {
   const opts = normalize(options);
-  const parser = new IfParser(opts);
+  const parser = new Inline(opts);
 
   return {
     name: '__KEBAB_NAME__',

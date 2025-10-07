@@ -1,7 +1,7 @@
-import { RollupConditionalCompilationOptions } from './common.js';
+import { RollupInlineFunctionOptions } from './common.js';
 
 declare global {
-  type Opts = RollupConditionalCompilationOptions;
+  type Opts = RollupInlineFunctionOptions;
 
   // Basic directives, act like they are in C++
   const enum Dirv {
