@@ -1,0 +1,30 @@
+{
+  "extends": [
+    "oxlint:recommended",
+    "oxlint-plugin-prettier/recommended",
+    "oxlint-plugin-typescript/recommended"
+  ],
+  "ignorePatterns": [
+    "dist/",
+    "node_modules/",
+    "coverage/",
+    "tests/",
+    "build/"
+  ],
+  "plugins": [
+    "typescript"
+  ],
+  "rules": {
+    "no-inferrable-types": "off",
+    "prefer-for-of": "off",
+    "unified-signatures": "off",
+    "no-unused-vars": [
+      "warn",
+      {
+        "argsIgnorePattern": "^_",
+        "varsIgnorePattern": "^_",
+        "caughtErrorsIgnorePattern": "^_"
+      }
+    ]
+  }
+}
