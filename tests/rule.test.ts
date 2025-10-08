@@ -11,7 +11,9 @@ function parseFirstFunction(code: string) {
   const ast = acorn.parse(code, { ecmaVersion: 'latest' }) as any;
   // try direct function declaration
   for (const node of ast.body) {
-    if (node.type === 'FunctionDeclaration') return node;
+    if (node.type === 'FunctionDeclaration') {
+      return node;
+    }
     if (node.type === 'VariableDeclaration') {
       const decl = node.declarations && node.declarations[0];
       if (

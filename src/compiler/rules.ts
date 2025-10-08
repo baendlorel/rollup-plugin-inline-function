@@ -19,39 +19,34 @@ export class Rule {
    * Pure function, no outer variable reference
    */
   noOuterIdentifier(fn: acorn.Function): boolean {
-    // collect local bindings: params and function-local variable/function declarations
     const locals = new Set<string>();
 
-    // add params
-    if (fn.params) {
-      for (const p of fn.params as any[]) {
-        // cover simple Identifier params
-        if (p && p.type === 'Identifier') locals.add(p.name);
-        // skip patterns/complex params for simplicity
+    for (let i = 0; i < fn.params.length; i++) {
+      const p = fn.params[i];
+      if (p && p.type === 'Identifier') {
+        locals.add(p.name);
       }
     }
 
-    // add function name (for named function expressions/declarations)
-    if ((fn as any).id && (fn as any).id.name) locals.add((fn as any).id.name);
+    if (fn.id?.name) {
+      locals.add(fn.id.name);
+    }
 
-    let ok = true;
-
-    // walk the function body and collect local declarations, then detect free identifiers
     walkSimple(
-      fn.body as any,
+      fn.body,
       {
-        VariableDeclaration(node: any) {
-          for (const decl of node.declarations) {
-            if (decl.id && decl.id.type === 'Identifier') locals.add(decl.id.name);
+        VariableDeclaration(node: acorn.VariableDeclaration) {
+          for (let i = 0; i < node.declarations.length; i++) {
+            const decl = node.declarations[i];
+            if (decl.id && decl.id.type === 'Identifier') {
+              locals.add(decl.id.name);
+            }
           }
         },
-        FunctionDeclaration(node: any) {
-          if (node.id && node.id.type === 'Identifier') locals.add(node.id.name);
-        },
-        Identifier(node: any, state: any) {
-          // parent info is not provided here; rely on simple heuristic: if identifier is not local,
-          // and not a property key (handled as MemberExpression's property when computed=false),
-          // treat as outer identifier usage.
+        FunctionDeclaration(node: acorn.FunctionDeclaration | acorn.AnonymousFunctionDeclaration) {
+          if (node.id && node.id.type === 'Identifier') {
+            locals.add(node.id.name);
+          }
         },
       },
       undefined
@@ -59,41 +54,40 @@ export class Rule {
 
     // Simpler approach: scan for identifier usages and check ancestors to skip declarations/property names.
     let foundOuter: string | null = null;
-    walkAncestor(
-      fn.body as any,
-      {
-        Identifier(node: any, ancestors: any[]) {
-          const parent = ancestors[ancestors.length - 2];
-          // skip if this identifier is a declaration id
-          if (!parent) return;
-          const parentType = parent.type;
-          if (
-            (parentType === 'VariableDeclarator' && parent.id === node) ||
-            (parentType === 'FunctionDeclaration' && parent.id === node) ||
-            (parentType === 'FunctionExpression' && parent.id === node) ||
-            (parentType === 'Property' && parent.key === node && !parent.computed) ||
-            (parentType === 'MemberExpression' && parent.property === node && !parent.computed) ||
-            (parentType === 'LabeledStatement' && parent.label === node) ||
-            parentType === 'BreakStatement' ||
-            parentType === 'ContinueStatement'
-          ) {
-            return;
-          }
+    walkAncestor(fn.body, {
+      Identifier(node: acorn.Identifier, ancestors: any[]) {
+        const parent = ancestors[ancestors.length - 2];
+        // skip if this identifier is a declaration id
+        if (!parent) {
+          return;
+        }
+        const parentType = parent.type;
+        if (
+          (parentType === 'VariableDeclarator' && parent.id === node) ||
+          (parentType === 'FunctionDeclaration' && parent.id === node) ||
+          (parentType === 'FunctionExpression' && parent.id === node) ||
+          (parentType === 'Property' && parent.key === node && !parent.computed) ||
+          (parentType === 'MemberExpression' && parent.property === node && !parent.computed) ||
+          (parentType === 'LabeledStatement' && parent.label === node) ||
+          parentType === 'BreakStatement' ||
+          parentType === 'ContinueStatement'
+        ) {
+          return;
+        }
 
-          // skip parameter identifiers (they appear in params, whose parent is the function node)
-          if (
-            parentType === 'Function' ||
-            parentType === 'ArrowFunctionExpression' ||
-            parentType === 'FunctionExpression'
-          )
-            return;
-
-          if (!locals.has(node.name) && node.name !== 'undefined' && node.name !== 'console') {
-            foundOuter = node.name;
-          }
-        },
-      } as any
-    );
+        // skip parameter identifiers (they appear in params, whose parent is the function node)
+        if (
+          parentType === 'Function' ||
+          parentType === 'ArrowFunctionExpression' ||
+          parentType === 'FunctionExpression'
+        ) {
+          return;
+        }
+        if (!locals.has(node.name) && node.name !== 'undefined' && node.name !== 'console') {
+          foundOuter = node.name;
+        }
+      },
+    });
 
     if (foundOuter) {
       console.log(inline_warning.outer_identifier.replace('$0', foundOuter));
@@ -103,11 +97,12 @@ export class Rule {
     return true;
   }
   noRecursiveCall(fn: acorn.Function): boolean {
-    const name = (fn as any).id && (fn as any).id.name;
-    if (!name) return true; // anonymous functions: can't detect simple recursion
-
+    const name = fn.id && fn.id.name;
+    if (!name) {
+      return true; // anonymous functions: can't detect simple recursion
+    }
     let found = false;
-    walkSimple(fn.body as any, {
+    walkSimple(fn.body, {
       CallExpression(node: any) {
         if (node.callee && node.callee.type === 'Identifier' && node.callee.name === name) {
           found = true;
