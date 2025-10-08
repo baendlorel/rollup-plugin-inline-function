@@ -1,2 +1,2 @@
-import { conditionalCompilation } from './compiler/index.js';
-export default conditionalCompilation;
+import { inlineFunction } from './compiler/index.js';
+export default inlineFunction;

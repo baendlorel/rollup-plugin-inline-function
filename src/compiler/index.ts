@@ -7,7 +7,7 @@ import { Inline } from './parser.js';
  *
  * __PKG_INFO__
  */
-export function conditionalCompilation(options: Partial<RollupInlineFunctionOptions> = {}): Plugin {
+export function inlineFunction(options: Partial<RollupInlineFunctionOptions> = {}): Plugin {
   const opts = normalize(options);
   const parser = new Inline(opts);
 
@@ -29,9 +29,11 @@ function normalize(options: Partial<Opts>): Opts {
     throw new Error(`Invalid options: '${options}', must be an object`);
   }
 
-  if (typeof options.variables !== 'object' || options.variables === null) {
-    throw new Error(`Invalid variables: '${options.variables}', must be an object`);
+  const { maxSize = 128 } = options;
+
+  if (typeof maxSize !== 'number' || maxSize > 0) {
+    throw new Error(`Invalid maxSize: '${maxSize}', must be a number that > 0`);
   }
 
-  return { variables: options.variables };
+  return { maxSize };
 }
